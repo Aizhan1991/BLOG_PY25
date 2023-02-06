@@ -1,4 +1,4 @@
 python-decouple
 django
-djangoframework
+djangorestframework
 psycopg2-binary
