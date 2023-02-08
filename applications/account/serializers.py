@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from applications.account.send_email import send_activation_code
 
 
@@ -40,3 +40,24 @@ class RegisterSerializer(serializers.ModelSerializer):
         send_activation_code(user.email, user.activation_code)
 
         return user
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True)
+
+    def validate_email(self, email):
+        if User.objects.filter(email=email).exists():
+            return email
+        raise serializers.ValidationError('Пользователь не найден')
+
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+
+        user = authenticate(username=email, password=password) 
+        if not user:
+            raise serializers.ValidationError('Неверный пароль')
+        attrs['user'] = user         
+        return attrs 
