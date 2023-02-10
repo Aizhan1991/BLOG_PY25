@@ -1,6 +1,33 @@
 from rest_framework.viewsets import generics
 from applications.post.models import Post 
 from applications.post.serializers import PostSerializers
+from rest_framework.permissions import  IsAuthenticated, IsAuthenticatedOrReadOnly
+from applications.post.permission import IsOwner
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters  import SearchFilter, OrderingFilter
+from rest_framework.pagination import PageNumberPagination
+
+
+class CustomPagination(PageNumberPagination):
+    page_size = 1
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
+
+
+class PostListCreateAPOView(generics.ListCreateAPIView):
+    permission_classes = [IsOwner]
+    # queryset = Post.objects.all()
+    serializer_class = PostSerializers
+    pagination_class = CustomPagination
+
+    # filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    # filterset_fields = ['owner','title']
+    # search_fields = ['title']
+    # ordering_fields = ['id']
+
+
+
 
 
 # class PostListAPIView(generics.ListAPIView):
@@ -27,9 +54,25 @@ from applications.post.serializers import PostSerializers
 #     lookup_field = 'id'
 
 class PostListCreateAPIView(generics.ListCreateAPIView):
+    permission_classes = [IsOwner, IsAuthenticated]
     queryset = Post.objects.all()
     serializer_class = PostSerializers
 
+
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
+    #     # queryset = queryset.filter(owner=5)
+    #     filter_owner = self.request.query_params.get('owner')
+    #     if filter_owner:
+    #         queryset = queryset.filter(IsOwner=filter_owner)
+    #     return queryset 
+
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
 class PostDetailDeleteUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsOwner]
     queryset = Post.objects.all()
     serializer_class = PostSerializers
