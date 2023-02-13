@@ -10,7 +10,26 @@ class Post(models.Model):
     description = models.TextField('Описание поста')
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts',verbose_name='Владелец поста')
     created_at = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to='images', null=True, blank=True)
+    # image = models.ImageField(upload_to='images', null=True, blank=True)
 
     def __str__(self):
-        return self.title
+        return f'{self.title}'
+
+class PostImage(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='post_images')
+
+    def __sts__(self):
+        return f'{self.post.title}'
+
+
+
+class Comment(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE,related_name='comments')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE,related_name='comments')
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.owner} -> {self.post.title}'

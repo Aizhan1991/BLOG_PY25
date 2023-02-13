@@ -1,10 +1,13 @@
 from rest_framework.viewsets import generics
-from applications.post.models import Post 
-from applications.post.serializers import PostSerializers
+from applications.post.models import Post, PostImage, Comment
+from applications.post.serializers import PostSerializers, PostImageSerializer, CommentSerializer
 from rest_framework.permissions import  IsAuthenticated, IsAuthenticatedOrReadOnly
 from applications.post.permission import IsOwner
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters  import SearchFilter, OrderingFilter
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.viewsets import ViewSet, ModelViewSet
+from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 
 
@@ -15,8 +18,8 @@ class CustomPagination(PageNumberPagination):
 
 
 
-class PostListCreateAPOView(generics.ListCreateAPIView):
-    permission_classes = [IsOwner]
+class PostListCreateAPIView(generics.ListCreateAPIView):
+    # permission_classes = [IsOwner]
     # queryset = Post.objects.all()
     serializer_class = PostSerializers
     pagination_class = CustomPagination
@@ -54,7 +57,7 @@ class PostListCreateAPOView(generics.ListCreateAPIView):
 #     lookup_field = 'id'
 
 class PostListCreateAPIView(generics.ListCreateAPIView):
-    permission_classes = [IsOwner, IsAuthenticated]
+    # permission_classes = [IsOwner, IsAuthenticated]
     queryset = Post.objects.all()
     serializer_class = PostSerializers
 
@@ -76,3 +79,23 @@ class PostDetailDeleteUpdateAPIView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwner]
     queryset = Post.objects.all()
     serializer_class = PostSerializers
+
+
+class CreateImageAPIiew(generics.CreateAPIView):
+    queryset = PostImage.objects.all()
+    serializer_class = PostImageSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class CommentViewSet(ViewSet):
+    def list(self, request):
+        comments = Comment.objects.all()
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
+
+
+
+
+class CommentModel(ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
