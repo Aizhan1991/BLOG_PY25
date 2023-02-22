@@ -1,5 +1,8 @@
 from rest_framework import serializers
 from applications.post.models import Post, PostImage, Comment
+from applications.feedback.serializers import LikeSerializer
+from applications.feedback.models import Like
+from django.db.models import Avg
 
 class PostImageSerializer(serializers.ModelSerializer):
 
@@ -14,6 +17,7 @@ class PostSerializers(serializers.ModelSerializer):
     # owner = serializers.ReadOnlyField(required = False)
     images = PostImageSerializer(many=True, read_only=True)
     owner = serializers.ReadOnlyField(source='owner.email')
+    ikes = LikeSerializer(many=True, read_only=True)
 
 
     class Meta:
@@ -21,7 +25,33 @@ class PostSerializers(serializers.ModelSerializer):
         # fields = ('title',)
         fields = '__all__'
 
+    def to_representation(self, instance):
+        representation =  super().to_representation(instance)
+        representation['like_count'] = instance.likes.filter(is_like=True).count()
+        # for like in representation['likes']:
+        #     if not like['is_like']:
+        #         representation['likes'].remove()
+   
+
+    #     rating_result = 0
+    #     for rating in instance.rating.all():
+    #         rating_result += rating.rating
+    #         if rating_result:
+
+    #             representation['rating'] = rating_result / instance.ratings.all().count()
+    #         else:
+    #             representation['rating'] = rating_result
+
+
+
+        representation['rating']= instance.ratings.all().aggregate(Avg('rating'))['rating__avg']
+        return representation
+
+
+
+
     # def to_representation(self, instance):
+    
         # print(instance)
         # print(representation)
         # representation['name'] = 'John'
@@ -33,8 +63,8 @@ class PostSerializers(serializers.ModelSerializer):
     #     valadated_data['owner'] = self.context['request'].user  #request.user
     #     return super().create(valadated_data)
 
-    def create(self, valadated_data):
-        post = Post.objects.create(**valadated_data)
+    def create(self, validated_data):
+        post = Post.objects.create(**validated_data)
 
         request = self.context.get('request')
         data = request.FILES
@@ -51,6 +81,7 @@ class PostSerializers(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.email')
 
     class Meta:
         model = Comment

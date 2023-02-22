@@ -13,6 +13,9 @@ class PostAdmin(admin.ModelAdmin):
 
     list_display = ('title','owner')
 
+    def post_count(self, obj):
+        return obj.likes.filter(is_like=True).count()
+
 
 
 admin.site.register(Post, PostAdmin)
